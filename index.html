@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penny's Book Creator!</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #a18cd1, #fbc2eb, #ffecd2);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Login */
+        .login-overlay {
+            position: fixed; inset: 0;
+            background: linear-gradient(135deg, #a18cd1, #fbc2eb);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 2000;
+        }
+        .login-box {
+            background: white;
+            border-radius: 20px;
+            padding: 30px 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        .login-box h1 {
+            background: linear-gradient(135deg, #c44dff, #ff6b9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+        .login-box p { color: #888; margin-bottom: 18px; }
+        .login-box input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+        .login-box input:focus { border-color: #c44dff; outline: none; }
+        .login-box button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #c44dff, #7c4dff);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 6px;
+        }
+        .login-box button:hover { transform: scale(1.02); }
+        .login-error { color: #ff6b9d; margin-top: 8px; font-size: 0.9em; min-height: 1.2em; }
+
+        /* App */
+        .app { display: flex; flex-direction: column; height: 100vh; }
+        .top-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            z-index: 10;
+        }
+        .top-bar h1 {
+            font-size: 1.2em;
+            background: linear-gradient(135deg, #c44dff, #ff6b9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .book-title-input {
+            flex: 1;
+            min-width: 100px;
+            padding: 8px 12px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        .book-title-input:focus { border-color: #c44dff; outline: none; }
+        .btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9em;
+            white-space: nowrap;
+        }
+        .btn:hover { transform: translateY(-1px); }
+        .btn-purple { background: linear-gradient(135deg, #c44dff, #7c4dff); }
+        .btn-blue { background: linear-gradient(135deg, #4dd0e1, #26c6da); }
+        .btn-green { background: linear-gradient(135deg, #66bb6a, #43a047); }
+        .btn-orange { background: linear-gradient(135deg, #ffa726, #fb8c00); }
+        .btn-pink { background: linear-gradient(135deg, #ff6b9d, #ff8a80); }
+        .btn-gray { background: linear-gradient(135deg, #888, #666); }
+        .user-bar { font-size: 0.8em; color: #666; cursor: pointer; }
+
+        /* Main area */
+        .main { display: flex; flex: 1; overflow: hidden; }
+        .sidebar {
+            width: 240px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.08);
+            overflow-y: auto;
+            padding: 12px;
+        }
+        .sidebar h3 {
+            color: #555;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            margin-top: 12px;
+        }
+        .sidebar h3:first-child { margin-top: 0; }
+
+        .sticker-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        .sticker-tab {
+            padding: 4px 8px;
+            background: #f0f0f0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+        .sticker-tab.active { background: linear-gradient(135deg, #c44dff, #7c4dff); color: white; }
+        .sticker-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 4px;
+            max-height: 240px;
+            overflow-y: auto;
+        }
+        .sticker-grid div {
+            text-align: center;
+            font-size: 1.6em;
+            cursor: pointer;
+            padding: 2px;
+            border-radius: 6px;
+        }
+        .sticker-grid div:hover { background: #f0e8ff; transform: scale(1.2); }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 4px;
+        }
+        .color-swatch {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            cursor: pointer;
+        }
+        .color-swatch:hover { transform: scale(1.1); border-color: #333; }
+        .color-swatch.active { border-color: #333; box-shadow: 0 0 0 2px #c44dff; }
+
+        .sidebar button.full {
+            width: 100%;
+            margin-bottom: 6px;
+            padding: 10px;
+        }
+        .sidebar input[type="text"],
+        .sidebar input[type="number"],
+        .sidebar select {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 0.9em;
+        }
+        .sel-row { display: flex; gap: 4px; margin-bottom: 6px; }
+        .sel-row button { flex: 1; padding: 6px; font-size: 0.85em; }
+
+        /* Page area */
+        .page-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            overflow: auto;
+        }
+        .page {
+            width: 700px;
+            max-width: 100%;
+            aspect-ratio: 4/3;
+            background: #fffaf0;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        .page-element {
+            position: absolute;
+            cursor: move;
+            user-select: none;
+            min-width: 30px;
+            min-height: 30px;
+            padding: 4px 8px;
+        }
+        .page-element.selected { outline: 2px dashed #c44dff; outline-offset: 2px; }
+        .page-element.text {
+            font-size: 1.4em;
+            color: #333;
+            white-space: pre-wrap;
+            max-width: 600px;
+        }
+        .page-element.sticker { font-size: 4em; padding: 0; }
+        .page-element.image img { max-width: 400px; max-height: 400px; display: block; pointer-events: none; }
+        .page-element.bubble {
+            background: white;
+            border: 3px solid #333;
+            border-radius: 24px;
+            padding: 12px 18px;
+            font-size: 1.1em;
+            color: #333;
+            max-width: 320px;
+            min-width: 80px;
+            text-align: center;
+            position: absolute;
+        }
+        .page-element.bubble.speech::after {
+            content: '';
+            position: absolute;
+            bottom: -18px;
+            left: 24px;
+            width: 0; height: 0;
+            border: 12px solid transparent;
+            border-top-color: #333;
+            border-bottom: 0;
+        }
+        .page-element.bubble.speech::before {
+            content: '';
+            position: absolute;
+            bottom: -13px;
+            left: 28px;
+            width: 0; height: 0;
+            border: 9px solid transparent;
+            border-top-color: white;
+            border-bottom: 0;
+            z-index: 1;
+        }
+        .page-element.bubble.thought {
+            border-radius: 50% / 60%;
+        }
+        .page-element.bubble.thought::after {
+            content: '';
+            position: absolute;
+            bottom: -16px;
+            left: 30px;
+            width: 16px; height: 16px;
+            background: white;
+            border: 3px solid #333;
+            border-radius: 50%;
+        }
+        .page-element.bubble.thought::before {
+            content: '';
+            position: absolute;
+            bottom: -32px;
+            left: 22px;
+            width: 8px; height: 8px;
+            background: white;
+            border: 3px solid #333;
+            border-radius: 50%;
+        }
+        .page-element .del-btn {
+            position: absolute;
+            top: -10px; right: -10px;
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: #ff6b9d;
+            color: white;
+            border: 2px solid white;
+            cursor: pointer;
+            display: none;
+            font-size: 0.8em;
+            font-weight: bold;
+            line-height: 1;
+        }
+        .page-element.selected .del-btn { display: block; }
+        .resize-handle {
+            position: absolute;
+            bottom: -10px; right: -10px;
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: #c44dff;
+            border: 2px solid white;
+            cursor: nwse-resize;
+            display: none;
+        }
+        .page-element.selected .resize-handle { display: block; }
+
+        /* Page nav */
+        .page-nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+            padding: 8px 16px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .page-nav .page-indicator {
+            font-weight: bold;
+            color: #555;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        /* Pages thumbnails strip (below) */
+        .pages-strip {
+            display: flex;
+            gap: 6px;
+            padding: 8px;
+            background: rgba(255,255,255,0.7);
+            overflow-x: auto;
+            border-top: 1px solid #ddd;
+        }
+        .page-thumb {
+            position: relative;
+            width: 70px;
+            height: 52px;
+            background: #fffaf0;
+            border: 3px solid #ccc;
+            border-radius: 6px;
+            cursor: pointer;
+            flex-shrink: 0;
+            font-size: 0.7em;
+            color: #888;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .page-thumb.active { border-color: #c44dff; box-shadow: 0 0 8px #c44dff; }
+        .page-thumb .num { position: absolute; bottom: 2px; left: 4px; font-weight: bold; }
+
+        /* Read mode */
+        .read-overlay {
+            position: fixed; inset: 0;
+            background: #1a1a2e;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1500;
+            flex-direction: column;
+        }
+        .read-overlay.visible { display: flex; }
+        .read-page {
+            width: 90vw;
+            max-width: 900px;
+            aspect-ratio: 4/3;
+            background: #fffaf0;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.4s, opacity 0.4s;
+        }
+        .read-controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            color: white;
+        }
+        .read-controls button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #c44dff, #7c4dff);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        .read-controls button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* Gallery */
+        .gallery-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            z-index: 1400;
+            overflow-y: auto;
+        }
+        .gallery-overlay.visible { display: block; }
+        .gallery-box {
+            max-width: 700px;
+            margin: 40px auto;
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+        }
+        .gallery-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .gallery-head h2 { color: #c44dff; }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .gallery-item {
+            background: #faf5ff;
+            border-radius: 10px;
+            padding: 12px;
+        }
+        .gallery-item-name { font-weight: bold; color: #555; }
+        .gallery-item-date { font-size: 0.8em; color: #aaa; margin-bottom: 6px; }
+        .gallery-item-info { font-size: 0.85em; color: #888; margin-bottom: 8px; }
+        .gallery-item-buttons { display: flex; gap: 6px; }
+        .gallery-item-buttons button {
+            flex: 1;
+            padding: 6px;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+
+        @media (max-width: 800px) {
+            .sidebar { width: 180px; }
+            .page { width: 100%; }
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <!-- Login -->
+    <div class="login-overlay" id="loginScreen">
+        <div class="login-box">
+            <h1>Penny's Book Creator!</h1>
+            <p>Log in to make and save books</p>
+            <input type="email" id="loginEmail" placeholder="Email">
+            <input type="password" id="loginPassword" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+            <button onclick="doLogin()">Log In</button>
+            <div class="login-error" id="loginError"></div>
+        </div>
+    </div>
+
+    <!-- App -->
+    <div class="app" id="mainApp" style="display:none;">
+        <div class="top-bar">
+            <h1>📖 Book Creator</h1>
+            <input class="book-title-input" id="bookTitle" placeholder="My Amazing Book" oninput="bookData.title=this.value">
+            <button class="btn btn-orange" onclick="toggleReadMode()">📖 Read Book</button>
+            <button class="btn btn-purple" onclick="saveBook()">💾 Save</button>
+            <button class="btn btn-blue" onclick="toggleGallery()">📚 My Books</button>
+            <button class="btn btn-green" onclick="newBook()">✨ New Book</button>
+            <span class="user-bar" id="userBar" onclick="doLogout()"></span>
+        </div>
+
+        <div class="main">
+            <div class="sidebar">
+                <h3>Add Text</h3>
+                <button class="btn btn-purple full" onclick="addTextElement()">+ Add Text</button>
+                <button class="btn btn-blue full" onclick="addBubbleElement('speech')">💬 Speech Bubble</button>
+                <button class="btn btn-blue full" onclick="addBubbleElement('thought')">💭 Thought Bubble</button>
+
+                <h3>Add Photo</h3>
+                <button class="btn btn-green full" onclick="document.getElementById('photoUpload').click()">📸 Upload Photo</button>
+                <input type="file" id="photoUpload" accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)">
+                <button class="btn btn-orange full" onclick="searchPhotosOnline()">🔍 Search Online</button>
+                <p style="font-size:0.75em; color:#888; margin-top:4px;">Drag pictures here, or press Ctrl+V to paste!</p>
+
+                <h3>Stickers</h3>
+                <div class="sticker-tabs" id="stickerTabs"></div>
+                <div class="sticker-grid" id="stickerGrid"></div>
+
+                <h3>Page Background</h3>
+                <div class="color-grid" id="bgColors"></div>
+
+                <h3>Selected Item</h3>
+                <div class="sel-row">
+                    <button class="btn btn-blue" onclick="resizeSelected(1.25)">Bigger</button>
+                    <button class="btn btn-blue" onclick="resizeSelected(0.8)">Smaller</button>
+                </div>
+                <div class="sel-row">
+                    <button class="btn btn-pink" onclick="deleteSelected()">Delete</button>
+                </div>
+                <div id="textControls" style="display:none;">
+                    <input type="text" id="textEditor" placeholder="Type your words..." oninput="updateTextContent()">
+                    <input type="color" id="textColor" oninput="updateTextColor()" style="width:100%; height:36px; padding:0;">
+                    <select id="textFont" onchange="updateTextFont()">
+                        <option value="'Segoe UI', sans-serif">Normal</option>
+                        <option value="'Comic Sans MS', 'Comic Sans', cursive">Comic</option>
+                        <option value="Georgia, serif">Storybook</option>
+                        <option value="'Courier New', monospace">Typewriter</option>
+                        <option value="'Brush Script MT', cursive">Fancy</option>
+                        <option value="Impact, sans-serif">Big & Bold</option>
+                        <option value="'Trebuchet MS', sans-serif">Cute</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="page-area">
+                <div class="page" id="page"></div>
+                <div class="page-nav">
+                    <button class="btn btn-gray" onclick="prevPage()">◀ Prev</button>
+                    <span class="page-indicator" id="pageIndicator">Page 1 of 1</span>
+                    <button class="btn btn-gray" onclick="nextPage()">Next ▶</button>
+                    <button class="btn btn-purple" onclick="addPage()">+ Add Page</button>
+                    <button class="btn btn-pink" onclick="deletePage()">🗑 Delete</button>
+                </div>
+                <div class="pages-strip" id="pagesStrip" style="margin-top:8px; max-width:700px; border-radius:8px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Read Mode -->
+    <div class="read-overlay" id="readOverlay">
+        <div class="read-page" id="readPage"></div>
+        <div class="read-controls">
+            <button onclick="readPrev()" id="readPrevBtn">◀</button>
+            <span id="readPageNum">1 / 1</span>
+            <button onclick="readNext()" id="readNextBtn">▶</button>
+            <button onclick="toggleReadMode()" style="background:linear-gradient(135deg, #ff6b9d, #ff8a80);">✕ Close</button>
+        </div>
+    </div>
+
+    <!-- Gallery -->
+    <div class="gallery-overlay" id="galleryOverlay">
+        <div class="gallery-box">
+            <div class="gallery-head">
+                <h2>📚 My Books</h2>
+                <button class="btn btn-pink" onclick="toggleGallery()">Close</button>
+            </div>
+            <div class="gallery-grid" id="galleryGrid"></div>
+            <p id="galleryEmpty" style="text-align:center; color:#aaa; padding:30px; display:none;">No books yet! Make one and save it.</p>
+        </div>
+    </div>
+
+    <script>
+        // ===== Firebase =====
+        const firebaseConfig = {
+            apiKey: "AIzaSyBdluf4mJiRQjwRfdFSjlMsRvG5hZ2LZS0",
+            authDomain: "jtrivia-416ca.firebaseapp.com",
+            projectId: "jtrivia-416ca",
+            storageBucket: "jtrivia-416ca.firebasestorage.app",
+            messagingSenderId: "284944131484",
+            appId: "1:284944131484:web:7c549e0036aaf65550d459"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const firestore = firebase.firestore();
+        let currentUser = null;
+        let currentBookId = null;
+
+        async function doLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const errorEl = document.getElementById('loginError');
+            errorEl.textContent = '';
+            if (!email || !password) { errorEl.textContent = 'Please enter email and password.'; return; }
+            try { await auth.signInWithEmailAndPassword(email, password); }
+            catch (e) { errorEl.textContent = 'Wrong email or password. Ask your grown-up!'; }
+        }
+        function doLogout() {
+            if (confirm('Log out?')) auth.signOut();
+        }
+        auth.onAuthStateChanged((user) => {
+            currentUser = user;
+            if (user) {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'flex';
+                document.getElementById('userBar').textContent = user.email + ' (log out)';
+                renderPage();
+                renderPagesStrip();
+            } else {
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('mainApp').style.display = 'none';
+            }
+        });
+
+        // ===== Stickers =====
+        const stickers = {
+            Animals: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🦄','🐴','🐢','🦋','🐝','🐞','🦒','🐳'],
+            Food: ['🍎','🍊','🍋','🍌','🍉','🍇','🍓','🍒','🍑','🥭','🍍','🥝','🍅','🥕','🌽','🍞','🧀','🍕','🍔','🍟','🌭','🥞','🍩','🍪','🍦'],
+            Nature: ['🌸','🌷','🌹','🌻','🌼','🌺','🍀','🌳','🌲','🌴','🌵','🌾','🌿','🍂','🍁','🍄','⭐','🌟','✨','☀️','🌈','☁️','⛅','❄️','🌙'],
+            Fun: ['🎈','🎉','🎊','🎁','🎀','🎂','🍰','🧁','🪅','🎨','🎭','🎪','🎢','🎡','🎠','⚽','🏀','🎮','🎲','🧸','🪀','🎯','🪁','🎵','🎶'],
+            Hearts: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💖','💗','💕','💞','💓','💝','💘','💟','♥️','💌','💐','🌹','😍','🥰','😘','💑'],
+            Faces: ['😀','😁','😂','🤣','😊','😇','🥰','😍','🤩','😘','😎','🥳','🤗','🤔','😴','🤤','😋','🤪','😜','🙃','😉','🥺','😭','😱','🤯']
+        };
+
+        function renderStickerTabs() {
+            const tabs = document.getElementById('stickerTabs');
+            tabs.innerHTML = '';
+            Object.keys(stickers).forEach((cat, i) => {
+                const tab = document.createElement('div');
+                tab.className = 'sticker-tab' + (i === 0 ? ' active' : '');
+                tab.textContent = cat;
+                tab.onclick = () => showStickerCategory(cat, tab);
+                tabs.appendChild(tab);
+            });
+        }
+        function showStickerCategory(cat, tabEl) {
+            document.querySelectorAll('.sticker-tab').forEach(t => t.classList.remove('active'));
+            if (tabEl) tabEl.classList.add('active');
+            const grid = document.getElementById('stickerGrid');
+            grid.innerHTML = '';
+            stickers[cat].forEach(emoji => {
+                const div = document.createElement('div');
+                div.textContent = emoji;
+                div.onclick = () => addStickerElement(emoji);
+                grid.appendChild(div);
+            });
+        }
+        renderStickerTabs();
+        showStickerCategory('Animals');
+
+        // ===== Background colors =====
+        const bgColors = ['#fffaf0','#ffe0f0','#e0f4ff','#e0ffe4','#fff5cc','#f4e0ff','#ffe4d4','#d4f4f4','#ffd4e5','#d4ffe4','#e4d4ff','#ffd4d4','#d4e4ff','#fff0d4','#f0ffd4','#f8d7da','#d1ecf1','#d4edda','#fff3cd','#e2e3e5'];
+        function renderBgColors() {
+            const grid = document.getElementById('bgColors');
+            grid.innerHTML = '';
+            bgColors.forEach(c => {
+                const sw = document.createElement('div');
+                sw.className = 'color-swatch';
+                sw.style.background = c;
+                sw.onclick = () => setPageBackground(c, sw);
+                grid.appendChild(sw);
+            });
+        }
+        renderBgColors();
+
+        function setPageBackground(color, sw) {
+            document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+            if (sw) sw.classList.add('active');
+            getCurrentPage().background = color;
+            document.getElementById('page').style.background = color;
+            renderPagesStrip();
+        }
+
+        // ===== Book data =====
+        let bookData = {
+            title: '',
+            pages: [ newBlankPage() ]
+        };
+        let currentPageIndex = 0;
+        let selectedElement = null;
+        let zCounter = 1;
+
+        function newBlankPage() {
+            return { background: '#fffaf0', elements: [] };
+        }
+        function getCurrentPage() { return bookData.pages[currentPageIndex]; }
+
+        // ===== Add elements =====
+        function addTextElement() {
+            const el = {
+                id: 'el_' + Date.now() + '_' + Math.random(),
+                type: 'text',
+                text: 'Type here!',
+                x: 200, y: 150,
+                fontSize: 28,
+                color: '#333333',
+                z: zCounter++
+            };
+            getCurrentPage().elements.push(el);
+            renderPage();
+            selectElementById(el.id);
+        }
+        function addStickerElement(emoji) {
+            const el = {
+                id: 'el_' + Date.now() + '_' + Math.random(),
+                type: 'sticker',
+                emoji,
+                x: 280, y: 180,
+                fontSize: 72,
+                z: zCounter++
+            };
+            getCurrentPage().elements.push(el);
+            renderPage();
+            selectElementById(el.id);
+        }
+        function addBubbleElement(kind) {
+            const el = {
+                id: 'el_' + Date.now() + '_' + Math.random(),
+                type: 'bubble',
+                bubbleKind: kind,
+                text: kind === 'speech' ? 'Hello!' : 'I am thinking...',
+                x: 240, y: 140,
+                fontSize: 22,
+                color: '#333333',
+                font: "'Comic Sans MS', cursive",
+                z: zCounter++
+            };
+            getCurrentPage().elements.push(el);
+            renderPage();
+            selectElementById(el.id);
+        }
+        function addImageElement(src) {
+            const el = {
+                id: 'el_' + Date.now() + '_' + Math.random(),
+                type: 'image',
+                imgSrc: src,
+                x: 220, y: 130,
+                width: 250,
+                z: zCounter++
+            };
+            getCurrentPage().elements.push(el);
+            renderPage();
+            selectElementById(el.id);
+        }
+
+        function searchPhotosOnline() {
+            const q = prompt('What kind of picture do you want? (For example: cat, rainbow, beach)');
+            if (!q) return;
+            // Bing image search with safe-search strict — kid-friendly results
+            const url = 'https://www.bing.com/images/search?q=' + encodeURIComponent(q) + '&safeSearch=Strict';
+            window.open(url, '_blank');
+            alert('Find a picture you like, then DRAG it back to your book page, or right-click and Copy then come back and press Ctrl+V!');
+        }
+
+        function handlePhotoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                shrinkImageDataURL(e.target.result, 600).then(src => {
+                    addImageElement(src);
+                });
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        }
+
+        function shrinkImageDataURL(dataURL, maxDim) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    let w = img.width, h = img.height;
+                    if (w > maxDim || h > maxDim) {
+                        if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+                        else { w = Math.round(w * maxDim / h); h = maxDim; }
+                    }
+                    const c = document.createElement('canvas');
+                    c.width = w; c.height = h;
+                    c.getContext('2d').drawImage(img, 0, 0, w, h);
+                    resolve(c.toDataURL('image/jpeg', 0.7));
+                };
+                img.onerror = () => resolve(dataURL);
+                img.src = dataURL;
+            });
+        }
+
+        // Drag-and-drop image onto the page
+        (function() {
+            const pageEl = document.getElementById('page');
+            pageEl.addEventListener('dragover', (e) => { e.preventDefault(); pageEl.style.outline = '3px dashed #c44dff'; });
+            pageEl.addEventListener('dragleave', () => { pageEl.style.outline = ''; });
+            pageEl.addEventListener('drop', (e) => {
+                e.preventDefault();
+                pageEl.style.outline = '';
+                if (!currentUser) return;
+                // File drop
+                if (e.dataTransfer.files && e.dataTransfer.files.length) {
+                    const file = e.dataTransfer.files[0];
+                    if (file.type.indexOf('image') === 0) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => shrinkImageDataURL(ev.target.result, 600).then(addImageElement);
+                        reader.readAsDataURL(file);
+                        return;
+                    }
+                }
+                // URL drop (image dragged from another tab)
+                const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
+                if (url && /^https?:/i.test(url)) {
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => {
+                        const c = document.createElement('canvas');
+                        let w = img.width, h = img.height;
+                        const maxDim = 600;
+                        if (w > maxDim || h > maxDim) {
+                            if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+                            else { w = Math.round(w * maxDim / h); h = maxDim; }
+                        }
+                        c.width = w; c.height = h;
+                        c.getContext('2d').drawImage(img, 0, 0, w, h);
+                        try { addImageElement(c.toDataURL('image/jpeg', 0.7)); }
+                        catch(err) { alert("That picture wouldn't let us copy it. Try saving it first, then uploading!"); }
+                    };
+                    img.onerror = () => alert("Couldn't load that picture. Try saving it first, then uploading!");
+                    img.src = url;
+                }
+            });
+        })();
+
+        // Paste image from clipboard
+        document.addEventListener('paste', (e) => {
+            if (!currentUser) return;
+            const items = (e.clipboardData || window.clipboardData).items;
+            for (const item of items) {
+                if (item.type.indexOf('image') === 0) {
+                    const blob = item.getAsFile();
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        shrinkImageDataURL(ev.target.result, 600).then(src => addImageElement(src));
+                    };
+                    reader.readAsDataURL(blob);
+                    e.preventDefault();
+                    return;
+                }
+            }
+        });
+
+        // ===== Rendering =====
+        function renderPage() {
+            const page = document.getElementById('page');
+            const data = getCurrentPage();
+            page.style.background = data.background;
+            // Clear children
+            page.innerHTML = '';
+            data.elements.forEach(el => {
+                const div = createElementDOM(el);
+                page.appendChild(div);
+            });
+            // Highlight active bg swatch
+            document.querySelectorAll('.color-swatch').forEach(s => {
+                s.classList.toggle('active', s.style.background === data.background || s.style.backgroundColor === data.background);
+            });
+            // Update indicator
+            document.getElementById('pageIndicator').textContent = 'Page ' + (currentPageIndex+1) + ' of ' + bookData.pages.length;
+            // Set title input
+            document.getElementById('bookTitle').value = bookData.title || '';
+            selectedElement = null;
+            updateSelectionUI();
+        }
+
+        function createElementDOM(el) {
+            const div = document.createElement('div');
+            div.className = 'page-element ' + el.type;
+            if (el.type === 'bubble') div.className += ' ' + (el.bubbleKind || 'speech');
+            div.dataset.id = el.id;
+            div.style.left = el.x + 'px';
+            div.style.top = el.y + 'px';
+            div.style.zIndex = el.z;
+            if (el.type === 'image') {
+                const img = document.createElement('img');
+                img.src = el.imgSrc;
+                img.style.width = (el.width || 250) + 'px';
+                img.style.height = 'auto';
+                div.appendChild(img);
+            } else if (el.type === 'bubble') {
+                div.style.fontSize = el.fontSize + 'px';
+                div.style.color = el.color || '#333';
+                if (el.font) div.style.fontFamily = el.font;
+                const txt = document.createTextNode(el.text);
+                div.appendChild(txt);
+            } else if (el.type === 'text') {
+                div.style.fontSize = el.fontSize + 'px';
+                div.style.color = el.color || '#333';
+                if (el.font) div.style.fontFamily = el.font;
+                const txt = document.createTextNode(el.text);
+                div.appendChild(txt);
+            } else {
+                div.style.fontSize = el.fontSize + 'px';
+                const txt = document.createTextNode(el.emoji);
+                div.appendChild(txt);
+            }
+            // Delete button
+            const delBtn = document.createElement('button');
+            delBtn.className = 'del-btn';
+            delBtn.textContent = '✕';
+            delBtn.onmousedown = (ev) => { ev.stopPropagation(); deleteElementById(el.id); };
+            div.appendChild(delBtn);
+            // Resize handle
+            const rh = document.createElement('div');
+            rh.className = 'resize-handle';
+            div.appendChild(rh);
+            // Drag
+            attachDragHandlers(div, el, rh);
+            return div;
+        }
+
+        function attachDragHandlers(div, el, rh) {
+            let mode = null; // 'drag' | 'resize'
+            let startX, startY, origX, origY, origFontSize;
+            const onDown = (clientX, clientY, isResize) => {
+                mode = isResize ? 'resize' : 'drag';
+                startX = clientX; startY = clientY;
+                origX = el.x; origY = el.y;
+                origFontSize = el.fontSize;
+                selectElementById(el.id);
+            };
+            let origWidth = el.width || 250;
+            const onMove = (clientX, clientY) => {
+                if (!mode) return;
+                const dx = clientX - startX;
+                const dy = clientY - startY;
+                if (mode === 'drag') {
+                    el.x = origX + dx;
+                    el.y = origY + dy;
+                    div.style.left = el.x + 'px';
+                    div.style.top = el.y + 'px';
+                } else if (el.type === 'image') {
+                    const newW = Math.max(40, origWidth + dx);
+                    el.width = newW;
+                    const img = div.querySelector('img');
+                    if (img) img.style.width = newW + 'px';
+                } else {
+                    const newSize = Math.max(10, origFontSize + dx);
+                    el.fontSize = newSize;
+                    div.style.fontSize = newSize + 'px';
+                }
+            };
+            const onUp = () => { mode = null; };
+
+            div.addEventListener('mousedown', (e) => {
+                if (e.target.classList.contains('del-btn')) return;
+                onDown(e.clientX, e.clientY, e.target.classList.contains('resize-handle'));
+                e.preventDefault();
+            });
+            div.addEventListener('touchstart', (e) => {
+                if (e.target.classList.contains('del-btn')) return;
+                const t = e.touches[0];
+                onDown(t.clientX, t.clientY, e.target.classList.contains('resize-handle'));
+                e.preventDefault();
+            }, { passive: false });
+            document.addEventListener('mousemove', (e) => { if (mode) onMove(e.clientX, e.clientY); });
+            document.addEventListener('touchmove', (e) => { if (mode) { const t = e.touches[0]; onMove(t.clientX, t.clientY); } }, { passive: false });
+            document.addEventListener('mouseup', onUp);
+            document.addEventListener('touchend', onUp);
+        }
+
+        function selectElementById(id) {
+            const data = getCurrentPage();
+            selectedElement = data.elements.find(e => e.id === id) || null;
+            updateSelectionUI();
+        }
+
+        function updateSelectionUI() {
+            document.querySelectorAll('.page-element').forEach(div => {
+                div.classList.toggle('selected', !!(selectedElement && div.dataset.id === selectedElement.id));
+            });
+            const tc = document.getElementById('textControls');
+            if (selectedElement && (selectedElement.type === 'text' || selectedElement.type === 'bubble')) {
+                tc.style.display = 'block';
+                document.getElementById('textEditor').value = selectedElement.text;
+                document.getElementById('textColor').value = selectedElement.color || '#333333';
+                document.getElementById('textFont').value = selectedElement.font || "'Segoe UI', sans-serif";
+            } else {
+                tc.style.display = 'none';
+            }
+        }
+
+        function updateTextFont() {
+            if (!selectedElement || (selectedElement.type !== 'text' && selectedElement.type !== 'bubble')) return;
+            selectedElement.font = document.getElementById('textFont').value;
+            renderPage();
+            selectElementById(selectedElement.id);
+        }
+
+        function updateTextContent() {
+            if (!selectedElement || (selectedElement.type !== 'text' && selectedElement.type !== 'bubble')) return;
+            selectedElement.text = document.getElementById('textEditor').value;
+            renderPage();
+            selectElementById(selectedElement.id);
+        }
+        function updateTextColor() {
+            if (!selectedElement || (selectedElement.type !== 'text' && selectedElement.type !== 'bubble')) return;
+            selectedElement.color = document.getElementById('textColor').value;
+            const div = document.querySelector('.page-element[data-id="' + selectedElement.id + '"]');
+            if (div) div.style.color = selectedElement.color;
+        }
+
+        function resizeSelected(mult) {
+            if (!selectedElement) return;
+            selectedElement.fontSize = Math.max(10, Math.round(selectedElement.fontSize * mult));
+            const div = document.querySelector('.page-element[data-id="' + selectedElement.id + '"]');
+            if (div) div.style.fontSize = selectedElement.fontSize + 'px';
+        }
+        function deleteSelected() {
+            if (!selectedElement) return;
+            deleteElementById(selectedElement.id);
+        }
+        function deleteElementById(id) {
+            const page = getCurrentPage();
+            page.elements = page.elements.filter(e => e.id !== id);
+            selectedElement = null;
+            renderPage();
+            renderPagesStrip();
+        }
+
+        // Click on empty page area to deselect
+        document.getElementById('page').addEventListener('mousedown', (e) => {
+            if (e.target.id === 'page') {
+                selectedElement = null;
+                updateSelectionUI();
+            }
+        });
+
+        // ===== Page nav =====
+        function addPage() {
+            bookData.pages.splice(currentPageIndex + 1, 0, newBlankPage());
+            currentPageIndex++;
+            renderPage();
+            renderPagesStrip();
+        }
+        function deletePage() {
+            if (bookData.pages.length <= 1) { alert("Can't delete the last page!"); return; }
+            if (!confirm('Delete this page?')) return;
+            bookData.pages.splice(currentPageIndex, 1);
+            if (currentPageIndex >= bookData.pages.length) currentPageIndex = bookData.pages.length - 1;
+            renderPage();
+            renderPagesStrip();
+        }
+        function prevPage() {
+            if (currentPageIndex > 0) { currentPageIndex--; renderPage(); renderPagesStrip(); }
+        }
+        function nextPage() {
+            if (currentPageIndex < bookData.pages.length - 1) { currentPageIndex++; renderPage(); renderPagesStrip(); }
+        }
+        function gotoPage(idx) {
+            currentPageIndex = idx;
+            renderPage();
+            renderPagesStrip();
+        }
+
+        function renderPagesStrip() {
+            const strip = document.getElementById('pagesStrip');
+            strip.innerHTML = '';
+            bookData.pages.forEach((p, i) => {
+                const thumb = document.createElement('div');
+                thumb.className = 'page-thumb' + (i === currentPageIndex ? ' active' : '');
+                thumb.style.background = p.background;
+                thumb.onclick = () => gotoPage(i);
+                const num = document.createElement('span');
+                num.className = 'num';
+                num.textContent = (i+1);
+                thumb.appendChild(num);
+                // Show a stack of element previews — first sticker/text as a peek
+                const first = p.elements[0];
+                if (first) {
+                    const peek = document.createElement('span');
+                    peek.textContent = first.type === 'sticker' ? first.emoji : '📝';
+                    peek.style.fontSize = '1.4em';
+                    thumb.appendChild(peek);
+                }
+                strip.appendChild(thumb);
+            });
+        }
+
+        // ===== New book =====
+        function newBook() {
+            if (!confirm('Start a new book? Make sure you saved your current one first!')) return;
+            bookData = { title: '', pages: [ newBlankPage() ] };
+            currentPageIndex = 0;
+            currentBookId = null;
+            renderPage();
+            renderPagesStrip();
+        }
+
+        // ===== Save / Load (Firestore) =====
+        function getBooksCollection() {
+            return firestore.collection('users').doc(currentUser.uid).collection('books');
+        }
+        async function saveBook() {
+            if (!currentUser) { alert('Please log in first!'); return; }
+            if (!bookData.title || !bookData.title.trim()) {
+                const t = prompt('What should we name your book?');
+                if (!t) return;
+                bookData.title = t;
+                document.getElementById('bookTitle').value = t;
+            }
+            try {
+                const payload = {
+                    title: bookData.title,
+                    date: new Date().toLocaleDateString(),
+                    dateAdded: firebase.firestore.FieldValue.serverTimestamp(),
+                    pageCount: bookData.pages.length,
+                    pages: bookData.pages
+                };
+                if (currentBookId) {
+                    await getBooksCollection().doc(currentBookId).set(payload);
+                } else {
+                    const ref = await getBooksCollection().add(payload);
+                    currentBookId = ref.id;
+                }
+                alert('Saved "' + bookData.title + '"!');
+            } catch(e) {
+                alert('Could not save: ' + e.message);
+            }
+        }
+
+        function toggleGallery() {
+            const overlay = document.getElementById('galleryOverlay');
+            if (overlay.classList.contains('visible')) overlay.classList.remove('visible');
+            else { overlay.classList.add('visible'); renderGallery(); }
+        }
+
+        async function renderGallery() {
+            const grid = document.getElementById('galleryGrid');
+            const empty = document.getElementById('galleryEmpty');
+            grid.innerHTML = '';
+            if (!currentUser) { empty.style.display = 'block'; return; }
+            try {
+                const snapshot = await getBooksCollection().orderBy('dateAdded', 'desc').get();
+                if (snapshot.empty) { empty.style.display = 'block'; return; }
+                empty.style.display = 'none';
+                snapshot.forEach(doc => {
+                    const b = doc.data();
+                    const item = document.createElement('div');
+                    item.className = 'gallery-item';
+                    item.innerHTML = `
+                        <div class="gallery-item-name">${b.title}</div>
+                        <div class="gallery-item-date">${b.date || ''}</div>
+                        <div class="gallery-item-info">${b.pageCount || (b.pages?b.pages.length:0)} pages</div>
+                        <div class="gallery-item-buttons">
+                            <button style="background:linear-gradient(135deg,#c44dff,#7c4dff);">Open</button>
+                            <button style="background:linear-gradient(135deg,#ff6b9d,#ff8a80);">Delete</button>
+                        </div>
+                    `;
+                    const [openBtn, delBtn] = item.querySelectorAll('button');
+                    openBtn.onclick = () => openBook(doc.id);
+                    delBtn.onclick = () => deleteBook(doc.id);
+                    grid.appendChild(item);
+                });
+            } catch(e) { empty.style.display = 'block'; }
+        }
+
+        async function openBook(id) {
+            try {
+                const doc = await getBooksCollection().doc(id).get();
+                if (!doc.exists) return;
+                const b = doc.data();
+                bookData = { title: b.title || '', pages: b.pages && b.pages.length ? b.pages : [ newBlankPage() ] };
+                currentPageIndex = 0;
+                currentBookId = id;
+                renderPage();
+                renderPagesStrip();
+                toggleGallery();
+            } catch(e) {}
+        }
+        async function deleteBook(id) {
+            if (!confirm('Delete this book forever?')) return;
+            try {
+                await getBooksCollection().doc(id).delete();
+                if (currentBookId === id) currentBookId = null;
+                renderGallery();
+            } catch(e) {}
+        }
+
+        // ===== Read Mode =====
+        let readPageIndex = 0;
+        function toggleReadMode() {
+            const overlay = document.getElementById('readOverlay');
+            if (overlay.classList.contains('visible')) {
+                overlay.classList.remove('visible');
+            } else {
+                readPageIndex = 0;
+                overlay.classList.add('visible');
+                renderReadPage();
+            }
+        }
+        function renderReadPage() {
+            const rp = document.getElementById('readPage');
+            const data = bookData.pages[readPageIndex];
+            rp.style.background = data.background;
+            rp.innerHTML = '';
+            // Scale elements: editor page is 700px wide; read page is up to 900px / 90vw.
+            // We render at original coordinates — the read page is large enough that 700px coords fit.
+            data.elements.forEach(el => {
+                const div = document.createElement('div');
+                div.className = 'page-element ' + el.type;
+                if (el.type === 'bubble') div.className += ' ' + (el.bubbleKind || 'speech');
+                div.style.left = el.x + 'px';
+                div.style.top = el.y + 'px';
+                div.style.zIndex = el.z;
+                div.style.cursor = 'default';
+                if (el.type === 'image') {
+                    const img = document.createElement('img');
+                    img.src = el.imgSrc;
+                    img.style.width = (el.width || 250) + 'px';
+                    img.style.height = 'auto';
+                    div.appendChild(img);
+                } else {
+                    div.style.fontSize = el.fontSize + 'px';
+                    if (el.color) div.style.color = el.color;
+                    if (el.font) div.style.fontFamily = el.font;
+                    div.textContent = el.type === 'sticker' ? el.emoji : el.text;
+                }
+                rp.appendChild(div);
+            });
+            document.getElementById('readPageNum').textContent = (readPageIndex+1) + ' / ' + bookData.pages.length;
+            document.getElementById('readPrevBtn').disabled = readPageIndex === 0;
+            document.getElementById('readNextBtn').disabled = readPageIndex === bookData.pages.length - 1;
+        }
+        function readNext() {
+            if (readPageIndex < bookData.pages.length - 1) {
+                readPageIndex++;
+                animatePageFlip(() => renderReadPage());
+            }
+        }
+        function readPrev() {
+            if (readPageIndex > 0) {
+                readPageIndex--;
+                animatePageFlip(() => renderReadPage());
+            }
+        }
+        function animatePageFlip(then) {
+            const rp = document.getElementById('readPage');
+            rp.style.transform = 'rotateY(-90deg)';
+            rp.style.opacity = '0';
+            setTimeout(() => {
+                then();
+                rp.style.transform = 'rotateY(0deg)';
+                rp.style.opacity = '1';
+            }, 250);
+        }
+
+        // Keyboard nav in read mode
+        document.addEventListener('keydown', (e) => {
+            if (document.getElementById('readOverlay').classList.contains('visible')) {
+                if (e.key === 'ArrowRight' || e.key === ' ') readNext();
+                if (e.key === 'ArrowLeft') readPrev();
+                if (e.key === 'Escape') toggleReadMode();
+            }
+        });
+    </script>
+</body>
+</html>
