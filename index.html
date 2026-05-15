@@ -198,17 +198,50 @@
             justify-content: center;
             padding: 16px;
             overflow: auto;
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(255,255,255,0.03) 0px,
+                rgba(255,255,255,0.03) 2px,
+                transparent 2px,
+                transparent 12px
+            );
         }
         .page {
             width: 700px;
             max-width: 100%;
             aspect-ratio: 4/3;
             background: #fffaf0;
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            border-radius: 3px;
+            box-shadow:
+                0 1px 1px rgba(0,0,0,0.12),
+                0 4px 8px rgba(0,0,0,0.12),
+                0 16px 32px rgba(0,0,0,0.18),
+                4px 0 0 #e8e0d0,
+                8px 0 0 #f0e8d8,
+                8px 1px 3px rgba(0,0,0,0.1);
             position: relative;
             overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.08);
         }
+        .page-style-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 5px;
+            margin-bottom: 6px;
+        }
+        .page-style-btn {
+            padding: 7px 4px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.78em;
+            text-align: center;
+            background: white;
+            color: #444;
+            font-weight: 600;
+        }
+        .page-style-btn:hover { border-color: #c44dff; background: #faf0ff; }
+        .page-style-btn.active { border-color: #c44dff; background: linear-gradient(135deg,#f8e6ff,#ffe6f8); color: #c44dff; }
         .page-element {
             position: absolute;
             cursor: move;
@@ -514,8 +547,8 @@
                 <div class="sticker-tabs" id="stickerTabs"></div>
                 <div class="sticker-grid" id="stickerGrid"></div>
 
-                <h3>Page Background</h3>
-                <div class="color-grid" id="bgColors"></div>
+                <h3>Page Style</h3>
+                <div class="page-style-grid" id="pageStyleGrid"></div>
 
                 <h3>Selected Item</h3>
                 <div class="sel-row">
@@ -659,26 +692,89 @@
         renderStickerTabs();
         showStickerCategory('Animals');
 
-        // ===== Background colors =====
-        const bgColors = ['#fffaf0','#ffe0f0','#e0f4ff','#e0ffe4','#fff5cc','#f4e0ff','#ffe4d4','#d4f4f4','#ffd4e5','#d4ffe4','#e4d4ff','#ffd4d4','#d4e4ff','#fff0d4','#f0ffd4','#f8d7da','#d1ecf1','#d4edda','#fff3cd','#e2e3e5'];
-        function renderBgColors() {
-            const grid = document.getElementById('bgColors');
+        // ===== Page Styles =====
+        const PAGE_STYLES = [
+            { id: 'cream',     label: '📜 Cream Paper' },
+            { id: 'plain',     label: '📄 Plain White' },
+            { id: 'lined',     label: '📓 Lined' },
+            { id: 'dotted',    label: '🔵 Dot Grid' },
+            { id: 'comic',     label: '💥 Comic Grid' },
+            { id: 'night',     label: '🌙 Night Sky' },
+            { id: 'parchment', label: '📜 Old Paper' },
+            { id: 'pink',      label: '🌸 Pink' },
+            { id: 'mint',      label: '🌿 Mint' },
+            { id: 'sunshine',  label: '☀️ Sunshine' },
+        ];
+
+        function applyPageStyle(styleId, pageEl) {
+            // Reset
+            pageEl.style.backgroundImage = '';
+            pageEl.style.backgroundSize = '';
+            pageEl.style.backgroundPosition = '';
+            pageEl.style.backgroundRepeat = '';
+            switch (styleId) {
+                case 'plain':
+                    pageEl.style.background = '#ffffff'; break;
+                case 'cream':
+                    pageEl.style.background = '#fffaf0'; break;
+                case 'lined':
+                    pageEl.style.background = '#ffffff';
+                    pageEl.style.backgroundImage =
+                        'linear-gradient(#e8c4b8 1px, transparent 1px),' +
+                        'linear-gradient(90deg, #f7c5c0 0px, #f7c5c0 48px, transparent 48px)';
+                    pageEl.style.backgroundSize = '100% 32px, 100% 100%';
+                    pageEl.style.backgroundPosition = '0 8px, 0 0';
+                    break;
+                case 'dotted':
+                    pageEl.style.background = '#fafafa';
+                    pageEl.style.backgroundImage = 'radial-gradient(circle, #bbb 1.2px, transparent 1.2px)';
+                    pageEl.style.backgroundSize = '22px 22px';
+                    break;
+                case 'comic':
+                    pageEl.style.background = '#fff';
+                    pageEl.style.backgroundImage =
+                        'linear-gradient(#ddd 1px, transparent 1px),' +
+                        'linear-gradient(90deg, #ddd 1px, transparent 1px)';
+                    pageEl.style.backgroundSize = '80px 80px';
+                    break;
+                case 'night':
+                    pageEl.style.background = '#0d1b3e';
+                    pageEl.style.backgroundImage =
+                        'radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px),' +
+                        'radial-gradient(circle, rgba(255,255,255,0.3) 0.5px, transparent 0.5px)';
+                    pageEl.style.backgroundSize = '50px 50px, 30px 30px';
+                    pageEl.style.backgroundPosition = '0 0, 15px 15px';
+                    break;
+                case 'parchment':
+                    pageEl.style.background = '#f0d9a0'; break;
+                case 'pink':
+                    pageEl.style.background = '#fff0f5'; break;
+                case 'mint':
+                    pageEl.style.background = '#e8fff4'; break;
+                case 'sunshine':
+                    pageEl.style.background = '#fffde0'; break;
+                default:
+                    pageEl.style.background = '#fffaf0';
+            }
+        }
+
+        function renderPageStyleGrid() {
+            const grid = document.getElementById('pageStyleGrid');
             grid.innerHTML = '';
-            bgColors.forEach(c => {
-                const sw = document.createElement('div');
-                sw.className = 'color-swatch';
-                sw.style.background = c;
-                sw.onclick = () => setPageBackground(c, sw);
-                grid.appendChild(sw);
+            const current = getCurrentPage().bgStyle || 'cream';
+            PAGE_STYLES.forEach(s => {
+                const btn = document.createElement('div');
+                btn.className = 'page-style-btn' + (s.id === current ? ' active' : '');
+                btn.textContent = s.label;
+                btn.onclick = () => setPageStyle(s.id);
+                grid.appendChild(btn);
             });
         }
-        renderBgColors();
 
-        function setPageBackground(color, sw) {
-            document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-            if (sw) sw.classList.add('active');
-            getCurrentPage().background = color;
-            document.getElementById('page').style.background = color;
+        function setPageStyle(styleId) {
+            getCurrentPage().bgStyle = styleId;
+            applyPageStyle(styleId, document.getElementById('page'));
+            renderPageStyleGrid();
             renderPagesStrip();
         }
 
@@ -692,7 +788,7 @@
         let zCounter = 1;
 
         function newBlankPage() {
-            return { background: '#fffaf0', elements: [] };
+            return { background: '#fffaf0', bgStyle: 'cream', elements: [] };
         }
         function getCurrentPage() { return bookData.pages[currentPageIndex]; }
 
@@ -876,7 +972,8 @@
         function renderPage() {
             const page = document.getElementById('page');
             const data = getCurrentPage();
-            page.style.background = data.background;
+            applyPageStyle(data.bgStyle || 'cream', page);
+            renderPageStyleGrid();
             // Clear children
             page.innerHTML = '';
             data.elements.forEach(el => {
@@ -1258,7 +1355,7 @@
         function renderReadPage() {
             const rp = document.getElementById('readPage');
             const data = bookData.pages[readPageIndex];
-            rp.style.background = data.background;
+            applyPageStyle(data.bgStyle || 'cream', rp);
             rp.innerHTML = '';
             // Scale elements: editor page is 700px wide; read page is up to 900px / 90vw.
             // We render at original coordinates — the read page is large enough that 700px coords fit.
