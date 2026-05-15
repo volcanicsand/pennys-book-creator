@@ -282,6 +282,26 @@
             border: 3px solid #333;
             border-radius: 50%;
         }
+        .page-element.caption {
+            border-radius: 4px;
+            border-left: 5px solid rgba(0,0,0,0.25);
+            border-top: 1.5px solid rgba(0,0,0,0.15);
+            border-right: 1.5px solid rgba(0,0,0,0.15);
+            border-bottom: 1.5px solid rgba(0,0,0,0.15);
+            padding: 8px 14px;
+            max-width: 340px;
+            min-width: 80px;
+            font-style: italic;
+        }
+        .caption-colors {
+            display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 6px;
+        }
+        .caption-color-swatch {
+            width: 28px; height: 28px; border-radius: 6px;
+            border: 2px solid #ddd; cursor: pointer;
+        }
+        .caption-color-swatch:hover { border-color: #333; transform: scale(1.15); }
+        .caption-color-swatch.active { border-color: #c44dff; box-shadow: 0 0 0 2px #c44dff; }
         .page-element .del-btn {
             position: absolute;
             top: -10px; right: -10px;
@@ -482,6 +502,7 @@
                 <button class="btn btn-purple full" onclick="addTextElement()">+ Add Text</button>
                 <button class="btn btn-blue full" onclick="addBubbleElement('speech')">💬 Speech Bubble</button>
                 <button class="btn btn-blue full" onclick="addBubbleElement('thought')">💭 Thought Bubble</button>
+                <button class="btn btn-orange full" onclick="addCaptionElement()">📋 Caption Box</button>
 
                 <h3>Add Photo</h3>
                 <button class="btn btn-green full" onclick="document.getElementById('photoUpload').click()">📸 Upload Photo</button>
@@ -507,6 +528,10 @@
                 <div id="textControls" style="display:none;">
                     <input type="text" id="textEditor" placeholder="Type your words..." oninput="updateTextContent()">
                     <input type="color" id="textColor" oninput="updateTextColor()" style="width:100%; height:36px; padding:0;">
+                    <div id="captionBgRow" style="display:none;">
+                        <p style="font-size:0.8em;color:#888;margin-bottom:4px;">Box Color:</p>
+                        <div class="caption-colors" id="captionColors"></div>
+                    </div>
                     <select id="textFont" onchange="updateTextFont()">
                         <option value="'Segoe UI', sans-serif">Normal</option>
                         <option value="'Comic Sans MS', 'Comic Sans', cursive">Comic</option>
@@ -699,6 +724,22 @@
             renderPage();
             selectElementById(el.id);
         }
+        function addCaptionElement() {
+            const el = {
+                id: 'el_' + Date.now() + '_' + Math.random(),
+                type: 'caption',
+                text: 'Meanwhile...',
+                x: 30, y: 20,
+                fontSize: 18,
+                color: '#222222',
+                captionBg: '#fffbe6',
+                font: "Georgia, serif",
+                z: zCounter++
+            };
+            getCurrentPage().elements.push(el);
+            renderPage();
+            selectElementById(el.id);
+        }
         function addBubbleElement(kind) {
             const el = {
                 id: 'el_' + Date.now() + '_' + Math.random(),
@@ -868,6 +909,12 @@
                 img.style.width = (el.width || 250) + 'px';
                 img.style.height = 'auto';
                 div.appendChild(img);
+            } else if (el.type === 'caption') {
+                div.style.fontSize = el.fontSize + 'px';
+                div.style.color = el.color || '#222';
+                div.style.background = el.captionBg || '#fffbe6';
+                if (el.font) div.style.fontFamily = el.font;
+                div.appendChild(document.createTextNode(el.text));
             } else if (el.type === 'bubble') {
                 div.style.fontSize = el.fontSize + 'px';
                 div.style.color = el.color || '#333';
@@ -961,31 +1008,59 @@
                 div.classList.toggle('selected', !!(selectedElement && div.dataset.id === selectedElement.id));
             });
             const tc = document.getElementById('textControls');
-            if (selectedElement && (selectedElement.type === 'text' || selectedElement.type === 'bubble')) {
+            const isTextLike = selectedElement && (selectedElement.type === 'text' || selectedElement.type === 'bubble' || selectedElement.type === 'caption');
+            if (isTextLike) {
                 tc.style.display = 'block';
                 document.getElementById('textEditor').value = selectedElement.text;
                 document.getElementById('textColor').value = selectedElement.color || '#333333';
                 document.getElementById('textFont').value = selectedElement.font || "'Segoe UI', sans-serif";
+                const cbRow = document.getElementById('captionBgRow');
+                if (selectedElement.type === 'caption') {
+                    cbRow.style.display = 'block';
+                    renderCaptionColorSwatches();
+                } else {
+                    cbRow.style.display = 'none';
+                }
             } else {
                 tc.style.display = 'none';
+                document.getElementById('captionBgRow').style.display = 'none';
             }
         }
 
+        const CAPTION_COLORS = ['#fffbe6','#e6f3ff','#ffe6f3','#e6fff0','#f3e6ff','#ffe6e6','#fff0d4','#e6e6e6'];
+        function renderCaptionColorSwatches() {
+            const cont = document.getElementById('captionColors');
+            cont.innerHTML = '';
+            CAPTION_COLORS.forEach(c => {
+                const sw = document.createElement('div');
+                sw.className = 'caption-color-swatch' + (selectedElement && selectedElement.captionBg === c ? ' active' : '');
+                sw.style.background = c;
+                sw.onclick = () => updateCaptionBg(c);
+                cont.appendChild(sw);
+            });
+        }
+        function updateCaptionBg(color) {
+            if (!selectedElement || selectedElement.type !== 'caption') return;
+            selectedElement.captionBg = color;
+            const div = document.querySelector('.page-element[data-id="' + selectedElement.id + '"]');
+            if (div) div.style.background = color;
+            renderCaptionColorSwatches();
+        }
         function updateTextFont() {
-            if (!selectedElement || (selectedElement.type !== 'text' && selectedElement.type !== 'bubble')) return;
+            if (!selectedElement || (selectedElement.type !== 'text' && selectedElement.type !== 'bubble' && selectedElement.type !== 'caption')) return;
             selectedElement.font = document.getElementById('textFont').value;
             renderPage();
             selectElementById(selectedElement.id);
         }
 
         function updateTextContent() {
-            if (!selectedElement || (selectedElement.type !== 'text' && selectedElement.type !== 'bubble')) return;
+            if (!selectedElement || (selectedElement.type !== 'text' && selectedElement.type !== 'bubble' && selectedElement.type !== 'caption')) return;
             selectedElement.text = document.getElementById('textEditor').value;
             renderPage();
             selectElementById(selectedElement.id);
         }
         function updateTextColor() {
-            if (!selectedElement || (selectedElement.type !== 'text' && selectedElement.type !== 'bubble')) return;
+            if (!selectedElement || (selectedElement.type !== 'text' && selectedElement.type !== 'bubble' && selectedElement.type !== 'caption')) return;
             selectedElement.color = document.getElementById('textColor').value;
             const div = document.querySelector('.page-element[data-id="' + selectedElement.id + '"]');
             if (div) div.style.color = selectedElement.color;
@@ -1205,6 +1280,7 @@
                     div.style.fontSize = el.fontSize + 'px';
                     if (el.color) div.style.color = el.color;
                     if (el.font) div.style.fontFamily = el.font;
+                    if (el.type === 'caption' && el.captionBg) div.style.background = el.captionBg;
                     div.textContent = el.type === 'sticker' ? el.emoji : el.text;
                 }
                 rp.appendChild(div);
